@@ -1,4 +1,5 @@
 let invitation_template_elements
+  tenant
   system_languages
   i18n_texts
   experiment
@@ -10,6 +11,7 @@ let invitation_template_elements
     |> CCList.head_opt
     |> CCOption.to_result Pool_common.Message.(Retrieve Field.Language)
   in
+  let layout = Email.Helper.layout_from_tenant tenant in
   let open Experiment in
   match experiment.invitation_template with
   | Some template ->
@@ -21,7 +23,7 @@ let invitation_template_elements
       let open InvitationTemplate in
       template.text |> Text.value |> Email.CustomTemplate.Content.string
     in
-    Ok Email.CustomTemplate.{ subject; content }
+    Ok Email.CustomTemplate.{ subject; content; layout }
   | None ->
     let language =
       contact_langauge
@@ -36,7 +38,7 @@ let invitation_template_elements
     in
     Ok
       Email.CustomTemplate.
-        { subject = Subject.I18n subject; content = Content.I18n text }
+        { subject = Subject.I18n subject; content = Content.I18n text; layout }
 ;;
 
 module Create : sig
@@ -48,6 +50,7 @@ module Create : sig
 
   val handle
     :  t
+    -> Pool_tenant.t
     -> Pool_common.Language.t list
     -> (Pool_common.Language.t * (I18n.t * I18n.t)) list
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -60,7 +63,7 @@ end = struct
     ; invited_contacts : Pool_common.Id.t list
     }
 
-  let handle (command : t) system_languages i18n_texts =
+  let handle (command : t) tenant system_languages i18n_texts =
     let open CCResult in
     let errors, contacts =
       CCList.partition
@@ -76,6 +79,7 @@ end = struct
       CCList.map
         (fun { Contact.user; language; _ } ->
           invitation_template_elements
+            tenant
             system_languages
             i18n_texts
             command.experiment
@@ -114,6 +118,7 @@ module Resend : sig
 
   val handle
     :  t
+    -> Pool_tenant.t
     -> Pool_common.Language.t list
     -> (Pool_common.Language.t * (I18n.t * I18n.t)) list
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -125,10 +130,11 @@ end = struct
     ; experiment : Experiment.t
     }
 
-  let handle (command : t) system_languages i18n_texts =
+  let handle (command : t) tenant system_languages i18n_texts =
     let open CCResult in
     let* email =
       invitation_template_elements
+        tenant
         system_languages
         i18n_texts
         command.experiment

@@ -98,6 +98,9 @@ let create req =
          then Error Pool_common.Message.(NoOptionSelected Field.Contact)
          else Ok list
        in
+       let* { Pool_context.Tenant.tenant; _ } =
+         Pool_context.Tenant.find req |> Lwt_result.lift
+       in
        let* experiment = Experiment.find tenant_db experiment_id in
        let* contacts =
          let find_missing contacts =
@@ -135,6 +138,7 @@ let create req =
          Cqrs_command.Invitation_command.Create.(
            handle
              { experiment; contacts; invited_contacts }
+             tenant
              system_languages
              i18n_texts
            |> Lwt_result.lift)
@@ -170,7 +174,10 @@ let resend req =
   let result { Pool_context.tenant_db; _ } =
     let open Lwt_result.Syntax in
     Lwt_result.map_error (fun err -> err, redirect_path)
-    @@ let* invitation = Invitation.find tenant_db id in
+    @@ let* { Pool_context.Tenant.tenant; _ } =
+         Pool_context.Tenant.find req |> Lwt_result.lift
+       in
+       let* invitation = Invitation.find tenant_db id in
        let* experiment = Experiment.find tenant_db experiment_id in
        let* system_languages =
          Pool_context.Tenant.get_tenant_languages req |> Lwt_result.lift
@@ -178,7 +185,7 @@ let resend req =
        let* i18n_texts = invitation_template_data tenant_db system_languages in
        let events =
          let open Cqrs_command.Invitation_command.Resend in
-         handle { invitation; experiment } system_languages i18n_texts
+         handle { invitation; experiment } tenant system_languages i18n_texts
          |> Lwt.return
        in
        let handle events =

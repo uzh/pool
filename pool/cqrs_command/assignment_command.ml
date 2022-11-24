@@ -10,6 +10,7 @@ module Create : sig
 
   val handle
     :  t
+    -> Pool_tenant.t
     -> Email.confirmation_email
     -> bool
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -23,7 +24,7 @@ end = struct
     ; experiment : Experiment.Public.t
     }
 
-  let handle (command : t) confirmation_email already_enrolled =
+  let handle (command : t) tenant confirmation_email already_enrolled =
     let open CCResult in
     if already_enrolled
     then Error Pool_common.Message.(AlreadySignedUpForExperiment)
@@ -54,11 +55,12 @@ end = struct
         | Some waiting_list ->
           [ Waiting_list.Deleted waiting_list |> Pool_event.waiting_list ]
       in
+      let layout = Email.Helper.layout_from_tenant tenant in
       Ok
         (delete_events
         @ [ Assignment.Created create |> Pool_event.assignment
           ; Email.AssignmentConfirmationSent
-              (command.contact.Contact.user, confirmation_email)
+              (command.contact.Contact.user, confirmation_email, layout)
             |> Pool_event.email
           ])
   ;;
@@ -153,6 +155,7 @@ module CreateFromWaitingList : sig
 
   val handle
     :  t
+    -> Pool_tenant.t
     -> Email.confirmation_email
     -> (Pool_event.t list, Pool_common.Message.error) result
 
@@ -164,7 +167,7 @@ end = struct
     ; already_enrolled : bool
     }
 
-  let handle (command : t) confirmation_email =
+  let handle (command : t) tenant confirmation_email =
     let open CCResult in
     if command.already_enrolled
     then Error Pool_common.Message.(AlreadySignedUpForExperiment)
@@ -188,12 +191,14 @@ end = struct
             ; session_id = command.session.Session.id
             }
         in
+        let layout = Email.Helper.layout_from_tenant tenant in
         Ok
           [ Waiting_list.Deleted command.waiting_list |> Pool_event.waiting_list
           ; Assignment.Created create |> Pool_event.assignment
           ; Email.AssignmentConfirmationSent
               ( command.waiting_list.Waiting_list.contact.Contact.user
-              , confirmation_email )
+              , confirmation_email
+              , layout )
             |> Pool_event.email
           ]
   ;;

@@ -17,6 +17,7 @@ module SignUp : sig
          (User.Password.t -> (unit, Pool_common.Message.error) result)
     -> ?user_id:Id.t
     -> ?terms_accepted_at:User.TermsAccepted.t option
+    -> Pool_tenant.t
     -> Pool_common.Language.t option
     -> t
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -57,6 +58,7 @@ end = struct
     ?password_policy
     ?(user_id = Id.create ())
     ?(terms_accepted_at = Some (User.TermsAccepted.create_now ()))
+    tenant
     default_language
     command
     =
@@ -75,6 +77,7 @@ end = struct
         ; language = default_language
         }
     in
+    let email_layout = Email.Helper.layout_from_tenant tenant in
     Ok
       [ Contact.Created contact |> Pool_event.contact
       ; Email.Created
@@ -83,7 +86,7 @@ end = struct
           , command.firstname
           , command.lastname
           , default_language |> CCOption.get_or ~default:Pool_common.Language.En
-          )
+          , email_layout )
         |> Pool_event.email_verification
       ]
   ;;
@@ -154,6 +157,7 @@ module UpdatePassword : sig
   val handle
     :  ?password_policy:
          (User.Password.t -> (unit, Pool_common.Message.error) result)
+    -> Pool_tenant.t
     -> Contact.t
     -> t
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -186,7 +190,7 @@ end = struct
         command)
   ;;
 
-  let handle ?password_policy contact command =
+  let handle ?password_policy tenant contact command =
     let open CCResult in
     let* () =
       User.Password.validate_current_password
@@ -199,6 +203,7 @@ end = struct
         command.new_password
         command.password_confirmation
     in
+    let email_layout = Email.Helper.layout_from_tenant tenant in
     Ok
       [ Contact.PasswordUpdated
           ( contact
@@ -209,7 +214,8 @@ end = struct
       ; Email.ChangedPassword
           ( contact.Contact.user
           , contact.Contact.language
-            |> CCOption.get_or ~default:Pool_common.Language.En )
+            |> CCOption.get_or ~default:Pool_common.Language.En
+          , email_layout )
         |> Pool_event.email
       ]
   ;;
@@ -235,6 +241,7 @@ module RequestEmailValidation : sig
 
   val handle
     :  ?allowed_email_suffixes:Settings.EmailSuffix.t list
+    -> Pool_tenant.t
     -> Contact.t
     -> t
     -> (Pool_event.t list, Pool_common.Message.error) result
@@ -243,15 +250,17 @@ module RequestEmailValidation : sig
 end = struct
   type t = Pool_user.EmailAddress.t
 
-  let handle ?allowed_email_suffixes contact email =
+  let handle ?allowed_email_suffixes tenant (contact : Contact.t) email =
     let open CCResult in
     let* () = User.EmailAddress.validate allowed_email_suffixes email in
+    let layout = Email.Helper.layout_from_tenant tenant in
     Ok
       [ Email.Updated
           ( email
           , contact.Contact.user
           , contact.Contact.language
-            |> CCOption.get_or ~default:Pool_common.Language.En )
+            |> CCOption.get_or ~default:Pool_common.Language.En
+          , layout )
         |> Pool_event.email_verification
       ]
   ;;

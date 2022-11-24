@@ -21,7 +21,7 @@ let confirmation_email =
   let subject = "Confirmation" |> I18n.Content.create |> CCResult.get_exn in
   let text = "Text" |> I18n.Content.create |> CCResult.get_exn in
   let session_text = "Session info" in
-  Email.{ subject; text; language; session_text }
+  Email.{ subject; text; session_text; language }
 ;;
 
 let create () =
@@ -29,22 +29,26 @@ let create () =
   let waiting_list =
     Model.create_waiting_list_from_experiment_and_contact experiment contact
   in
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let experiment = experiment |> Model.experiment_to_public_experiment in
   let events =
     let command =
       AssignmentCommand.Create.
         { contact; session; waiting_list = Some waiting_list; experiment }
     in
-    AssignmentCommand.Create.handle command confirmation_email false
+    AssignmentCommand.Create.handle command tenant confirmation_email false
   in
   let expected =
+    let layout = Email.Helper.layout_from_tenant tenant in
     Ok
       [ Waiting_list.Deleted waiting_list |> Pool_event.waiting_list
       ; Assignment.(Created { contact; session_id = session.Session.Public.id })
         |> Pool_event.assignment
       ; Email.(
           AssignmentConfirmationSent
-            (waiting_list.Waiting_list.contact.Contact.user, confirmation_email))
+            ( waiting_list.Waiting_list.contact.Contact.user
+            , confirmation_email
+            , layout ))
         |> Pool_event.email
       ]
   in
@@ -90,6 +94,7 @@ let set_attendance () =
 let assign_to_fully_booked_session () =
   let { session; experiment; contact } = assignment_data () in
   let session = session |> Model.fully_book_public_session in
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let waiting_list =
     Model.create_waiting_list_from_experiment_and_contact experiment contact
   in
@@ -99,7 +104,7 @@ let assign_to_fully_booked_session () =
       AssignmentCommand.Create.
         { contact; session; waiting_list = Some waiting_list; experiment }
     in
-    AssignmentCommand.Create.handle command confirmation_email false
+    AssignmentCommand.Create.handle command tenant confirmation_email false
   in
   let expected = Error Pool_common.Message.(SessionFullyBooked) in
   Test_utils.check_result expected events
@@ -107,6 +112,7 @@ let assign_to_fully_booked_session () =
 
 let assign_to_experiment_with_direct_registration_disabled () =
   let { session; experiment; contact } = assignment_data () in
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let session = session |> Model.fully_book_public_session in
   let waiting_list =
     Model.create_waiting_list_from_experiment_and_contact experiment contact
@@ -124,7 +130,7 @@ let assign_to_experiment_with_direct_registration_disabled () =
       AssignmentCommand.Create.
         { contact; session; waiting_list = Some waiting_list; experiment }
     in
-    AssignmentCommand.Create.handle command confirmation_email false
+    AssignmentCommand.Create.handle command tenant confirmation_email false
   in
   let expected = Error Pool_common.Message.(DirectRegistrationIsDisabled) in
   Test_utils.check_result expected events
@@ -132,6 +138,7 @@ let assign_to_experiment_with_direct_registration_disabled () =
 
 let assign_to_session_contact_is_already_assigned () =
   let { session; experiment; contact } = assignment_data () in
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let already_assigned = true in
   let waiting_list =
     Model.create_waiting_list_from_experiment_and_contact experiment contact
@@ -142,13 +149,18 @@ let assign_to_session_contact_is_already_assigned () =
       AssignmentCommand.Create.
         { contact; session; waiting_list = Some waiting_list; experiment }
     in
-    AssignmentCommand.Create.handle command confirmation_email already_assigned
+    AssignmentCommand.Create.handle
+      command
+      tenant
+      confirmation_email
+      already_assigned
   in
   let expected = Error Pool_common.Message.(AlreadySignedUpForExperiment) in
   Test_utils.check_result expected events
 ;;
 
 let assign_contact_from_waiting_list () =
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let session = Model.create_session () in
   let waiting_list = Model.create_waiting_list () in
   let already_enrolled = false in
@@ -157,8 +169,12 @@ let assign_contact_from_waiting_list () =
       AssignmentCommand.CreateFromWaitingList.
         { session; waiting_list; already_enrolled }
     in
-    AssignmentCommand.CreateFromWaitingList.handle command confirmation_email
+    AssignmentCommand.CreateFromWaitingList.handle
+      command
+      tenant
+      confirmation_email
   in
+  let email_layout = Email.Helper.layout_from_tenant tenant in
   let expected =
     let create =
       Assignment.
@@ -171,7 +187,9 @@ let assign_contact_from_waiting_list () =
       ; Assignment.Created create |> Pool_event.assignment
       ; Email.(
           AssignmentConfirmationSent
-            (waiting_list.Waiting_list.contact.Contact.user, confirmation_email))
+            ( waiting_list.Waiting_list.contact.Contact.user
+            , confirmation_email
+            , email_layout ))
         |> Pool_event.email
       ]
   in
@@ -179,6 +197,7 @@ let assign_contact_from_waiting_list () =
 ;;
 
 let assign_contact_from_waiting_list_to_disabled_experiment () =
+  let tenant = Tenant_test.Data.full_tenant |> CCResult.get_exn in
   let session = Model.create_session () in
   let experiment = Model.create_experiment () in
   let experiment =
@@ -195,7 +214,10 @@ let assign_contact_from_waiting_list_to_disabled_experiment () =
       AssignmentCommand.CreateFromWaitingList.
         { session; waiting_list; already_enrolled }
     in
-    AssignmentCommand.CreateFromWaitingList.handle command confirmation_email
+    AssignmentCommand.CreateFromWaitingList.handle
+      command
+      tenant
+      confirmation_email
   in
   let expected = Error Pool_common.Message.(RegistrationDisabled) in
   Test_utils.check_result expected events

@@ -1,5 +1,6 @@
 let contact_email_address = "jane.doe@email.com"
 let lang = Pool_common.Language.En
+let tenant = Tenant_test.Data.full_tenant
 
 let allowed_email_suffixes =
   [ "mail.com" ]
@@ -18,7 +19,7 @@ module TestContacts = struct
     |> sign_up_contact
     |> SignUp.decode
     |> Pool_common.Utils.get_or_failwith
-    |> SignUp.handle ~user_id ~allowed_email_suffixes None
+    |> SignUp.handle ~user_id ~allowed_email_suffixes tenant None
   ;;
 
   let verify contact =
