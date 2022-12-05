@@ -310,6 +310,8 @@ let rec error_to_string = function
   | Retrieve field -> field_message "Cannot retrieve" (field_to_string field) ""
   | SessionHasAssignments ->
     "There are already assignments for this session. It cannot be deleted."
+  | SessionHasNoAssignments ->
+    "There are no assignments for this session. It cannot be rescheduled."
   | SessionFullyBooked -> "Session is fully booked"
   | SessionInvalid -> "Invalid session, please login."
   | ReminderSubjectAndTextRequired ->

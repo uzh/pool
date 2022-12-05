@@ -330,6 +330,9 @@ let rec error_to_string = function
   | SessionHasAssignments ->
     "Es existieren bereits Anmeldungen für diese Session. Sie kann nicht \
      gelöscht werden."
+  | SessionHasNoAssignments ->
+    "Es existieren noch keine Anmeldungen für diese Session. Sie kann nicht \
+     verschoben werden."
   | SessionFullyBooked -> "Session ist ausgebucht"
   | SessionInvalid -> "Ungültige Session, bitte erneut einloggen."
   | ReminderSubjectAndTextRequired ->

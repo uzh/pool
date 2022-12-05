@@ -318,6 +318,12 @@ end = struct
       then Error Pool_common.Message.TimeInPast
       else Ok ()
     in
+    let* () =
+      let open Session in
+      if session.assignment_count |> AssignmentCount.value > 0
+      then Error Pool_common.Message.SessionHasNoAssignments
+      else Ok ()
+    in
     Ok
       ((Session.Rescheduled (session, reschedule) |> Pool_event.session)
       ::

@@ -265,6 +265,7 @@ type error =
   | Retrieve of Field.t
   | SessionFullyBooked
   | SessionHasAssignments
+  | SessionHasNoAssignments
   | SessionInvalid
   | SessionTenantNotFound
   | ReadOnlyModel
