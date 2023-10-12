@@ -101,26 +101,33 @@ let job_reporter
         Pool_tenant.find_by_label database_label
         >|+ (fun { Pool_tenant.url; _ } -> url)
         ||> CCResult.map_or ~default (flip create_external_link path)
-      | None -> failwith ""
+      | None -> Lwt.return "No database label provided"
     in
     let additional =
-      Format.asprintf
-        "An error occured in the job worker:\n\
-         Name: %s\n\
-         Uuid: '%s'\n\
-         Tries: %d/%d\n\
-         Last Error At: %s\n\
-         Next Run At: %s\n\
-         Tags: %s\n\
-         Link: <%s>"
-        name
-        id
-        tries
-        max_tries
-        ([%show: Ptime.t option] last_error_at)
-        ([%show: Ptime.t] next_run_at)
-        ([%show: string option] tag)
-        link
+      let open Format in
+      let error =
+        asprintf
+          "An error occured in the job worker:\n\
+           Name: %s\n\
+           Uuid: '%s'\n\
+           Tries: %d/%d\n\
+           Last Error At: %s\n\
+           Next Run At: %s\n\
+           Tags: %s\n\
+           Link: <%s>"
+          name
+          id
+          tries
+          max_tries
+          ([%show: Ptime.t option] last_error_at)
+          ([%show: Ptime.t] next_run_at)
+          ([%show: string option] tag)
+          link
+      in
+      let trace =
+        asprintf "\nTrace:\n```\n%s\n```\n" (Printexc.get_backtrace ())
+      in
+      asprintf "%s\n\n%s" error trace
     in
     Gitlab_notify.notify ~additional (Exception last_error) ""
     ||> (function
