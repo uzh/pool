@@ -3,17 +3,28 @@ open Utils.Lwt_result.Infix
 module HttpUtils = Http_utils
 module Message = HttpUtils.Message
 module Field = Pool_common.Message.Field
+module Command = Cqrs_command.Admin_command
 
 let src = Logs.Src.create "handler.admin.admins"
 let extract_happy_path = HttpUtils.extract_happy_path ~src
 let create_layout req = General.create_tenant_layout req
 
+let validate_effects database_label user effects =
+  Lwt.map CCResult.is_ok
+  @@
+  let* actor = Pool_context.Utils.find_authorizable database_label user in
+  Guard.Persistence.validate database_label effects actor
+;;
+
 let index req =
-  let result ({ Pool_context.database_label; _ } as context) =
+  let result ({ Pool_context.database_label; user; _ } as context) =
     Utils.Lwt_result.map_error (fun err -> err, "/admin/dashboard")
     @@
+    let%lwt can_create =
+      validate_effects database_label user Command.CreateAdmin.effects
+    in
     let%lwt admin_users = Admin.find_all database_label () in
-    Page.Admin.Admins.index context admin_users
+    Page.Admin.Admins.index context ~can_create admin_users
     |> create_layout req ~active_navigation:"/admin/admins" context
     >|+ Sihl.Web.Response.of_html
   in
@@ -21,7 +32,9 @@ let index req =
 ;;
 
 let admin_detail req is_edit =
-  let result ({ Pool_context.csrf; database_label; language; _ } as context) =
+  let result
+    ({ Pool_context.csrf; database_label; language; user; _ } as context)
+    =
     let%lwt available_roles =
       Helpers.Guard.find_roles_of_ctx context
       ||> CCList.flat_map (fun ({ Guard.ActorRole.role; _ }, _, _) ->
@@ -31,6 +44,9 @@ let admin_detail req is_edit =
     @@
     let id = HttpUtils.find_id Admin.Id.of_string Field.Admin req in
     let* admin = id |> Admin.find database_label in
+    let%lwt can_edit =
+      validate_effects database_label user (Command.Update.effects id)
+    in
     let%lwt roles =
       let open Helpers.Guard in
       find_roles database_label admin
@@ -44,7 +60,7 @@ let admin_detail req is_edit =
        Component.Role.Search.input_form csrf language admin available_roles ()
        |> CCList.return
        |> Page.Admin.Admins.edit context admin roles
-     | false -> Page.Admin.Admins.detail context admin roles)
+     | false -> Page.Admin.Admins.detail context ~can_edit admin roles)
     |> create_layout req context
     >|+ Sihl.Web.Response.of_html
   in

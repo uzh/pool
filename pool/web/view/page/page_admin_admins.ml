@@ -2,14 +2,18 @@ open CCFun
 open Tyxml.Html
 open Component
 
-let admin_overview ?(disable_edit = false) language admins =
+let admin_overview ?(can_create = false) ?(disable_edit = false) language admins
+  =
   let thead =
     let add_admin =
-      Component.Input.link_as_button
-        ~style:`Success
-        ~icon:Icon.Add
-        ~control:(language, Pool_common.Message.(Add (Some Field.Admin)))
-        "/admin/admins/new"
+      if can_create
+      then
+        Component.Input.link_as_button
+          ~style:`Success
+          ~icon:Icon.Add
+          ~control:(language, Pool_common.Message.(Add (Some Field.Admin)))
+          "/admin/admins/new"
+      else txt ""
     in
     let to_txt = Component.Table.field_to_txt language in
     let base = Pool_common.Message.Field.[ Email |> to_txt; Name |> to_txt ] in
@@ -100,20 +104,34 @@ let new_form { Pool_context.language; csrf; _ } =
     ]
 ;;
 
-let index Pool_context.{ language; _ } admins =
+let index Pool_context.{ language; _ } ?can_create admins =
   div
     ~a:[ a_class [ "trim"; "safety-margin" ] ]
     [ h1
         ~a:[ a_class [ "heading-1" ] ]
         [ txt Pool_common.(Utils.nav_link_to_string language I18n.Admins) ]
-    ; admin_overview language admins
+    ; admin_overview ?can_create language admins
     ]
 ;;
 
-let detail ({ Pool_context.language; _ } as context) admin granted_roles =
+let detail
+  ({ Pool_context.language; _ } as context)
+  ?(can_edit = false)
+  admin
+  granted_roles
+  =
   let open Sihl.Contract.User in
   let open Pool_common in
   let user = Admin.user admin in
+  let edit =
+    if can_edit
+    then
+      Input.link_as_button
+        ~icon:Icon.Create
+        ~control:(language, Message.(Edit None))
+        (Format.asprintf "/admin/admins/%s/edit" user.id)
+    else txt ""
+  in
   [ h1
       ~a:[ a_class [ "heading-1" ] ]
       [ txt
@@ -122,10 +140,7 @@ let detail ({ Pool_context.language; _ } as context) admin granted_roles =
              (user.given_name |> Option.value ~default:"")
              (user.name |> Option.value ~default:""))
       ]
-  ; Input.link_as_button
-      ~icon:Icon.Create
-      ~control:(language, Message.(Edit None))
-      (Format.asprintf "/admin/admins/%s/edit" user.id)
+  ; edit
   ]
   @ roles_list context admin granted_roles
   |> div ~a:[ a_class [ "trim"; "safety-margin" ] ]

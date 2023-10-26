@@ -175,6 +175,8 @@ module Update : sig
   val decode
     :  (string * string list) list
     -> (t, Pool_common.Message.error) result
+
+  val effects : Admin.Id.t -> Guard.ValidationSet.t
 end = struct
   type t = Admin.update
 
@@ -186,7 +188,7 @@ end = struct
   ;;
 
   let handle ?(tags = Logs.Tag.empty) admin update =
-    Logs.info ~src (fun m -> m "Handle command CreateAdmin" ~tags);
+    Logs.info ~src (fun m -> m "Handle command UpdateAdmin" ~tags);
     Ok [ Admin.DetailsUpdated (admin, update) |> Pool_event.admin ]
   ;;
 
@@ -195,7 +197,7 @@ end = struct
     |> CCResult.map_err Pool_common.Message.to_conformist_error
   ;;
 
-  let effects = Admin.Guard.Access.create
+  let effects = Admin.Guard.Access.update
 end
 
 module UpdateSignInCount : sig
