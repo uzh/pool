@@ -166,6 +166,7 @@ type hint =
   | ExperimentContactPerson
   | ExperimentMailings
   | ExperimentMailingsRegistrationDisabled
+  | ExperimentPublicTitle
   | ExperimentSessions
   | ExperimentSessionsPublic
   | ExperimentWaitingList

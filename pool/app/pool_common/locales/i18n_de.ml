@@ -286,6 +286,8 @@ Wird nach diesem Feld gefiltert, wird der überschreibende Wert bevorzugt.
     Gestartete Mailings können nicht mehr gelöscht werden.|}
   | ExperimentMailingsRegistrationDisabled ->
     {|Die Registrierung für dieses Experiment ist derzeit deaktiviert. Einladungen werden weiterhin verschickt, wenn ein Mailing erstellt wird, aber die Kontakte können sich nicht für eine Session anmelden.|}
+  | ExperimentPublicTitle ->
+    "Falls Sie das Feld leer lassen wird automatisch die ID eingefügt."
   | ResendRemindersChannel ->
     "Wenn Sie sich dafür entscheiden, die Erinnerungen als Textnachrichten zu \
      versenden, erhalten Kontakte, die keine verifizierte Handynummer haben, \

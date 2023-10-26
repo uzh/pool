@@ -280,6 +280,8 @@ Make sure to show links and URLs as plain text.
     Started mailings can no longer be deleted.|}
   | ExperimentMailingsRegistrationDisabled ->
     {|Registration to this experiment is currently disabled. Invitations will still be sent out if a mailing is created, but contacts won't be able to sign up for a session.|}
+  | ExperimentPublicTitle ->
+    "If you leave the field empty, the ID will be inserted automatically."
   | ExperimentWaitingList ->
     "Contacts that have been invited to this experiment and have placed \
      themselves on the waiting list. They have to be manually assigned to a \

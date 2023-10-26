@@ -205,6 +205,10 @@ let experiment_form
                 ~value:(value public_title_value)
                 ~required:(CCOption.is_some experiment)
                 ~flash_fetcher
+                ?help:
+                  (if CCOption.is_none experiment
+                   then Some I18n.ExperimentPublicTitle
+                   else None)
             ; textarea_element
                 language
                 Field.Description
