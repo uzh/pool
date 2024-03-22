@@ -200,6 +200,7 @@ type hint =
   | LocationFiles
   | LocationsIndex
   | MailingLimit
+  | MailingLimitExceedsMatchingContacts
   | MessageTemplateAccountSuspensionNotification
   | MessageTemplateAssignmentCancellation
   | MessageTemplateAssignmentConfirmation
