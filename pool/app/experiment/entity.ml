@@ -80,6 +80,13 @@ module InvitationResetAt = struct
   let of_ptime m = m
 end
 
+module MatcherNotificationSent = struct
+  type t = bool [@@deriving show, eq]
+
+  let value t = t
+  let create t = t
+end
+
 type t =
   { id : Id.t
   ; title : Title.t
@@ -103,6 +110,7 @@ type t =
   ; text_message_session_reminder_lead_time :
       Pool_common.Reminder.TextMessageLeadTime.t option
   ; invitation_reset_at : InvitationResetAt.t option
+  ; matcher_notification_sent : MatcherNotificationSent.t
   ; created_at : Pool_common.CreatedAt.t
   ; updated_at : Pool_common.UpdatedAt.t
   }
@@ -152,6 +160,7 @@ let create
     ; email_session_reminder_lead_time
     ; text_message_session_reminder_lead_time
     ; invitation_reset_at
+    ; matcher_notification_sent = false
     ; created_at = Ptime_clock.now ()
     ; updated_at = Ptime_clock.now ()
     }
