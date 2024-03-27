@@ -6,33 +6,33 @@ module Id : sig
 end
 
 module Title : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 module PublicTitle : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 
   val placeholder : t
 end
 
 module InternalDescription : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 module PublicDescription : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 module CostCenter : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 module DirectRegistrationDisabled : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module RegistrationDisabled : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module AllowUninvitedSignup : sig
@@ -43,22 +43,19 @@ module AllowUninvitedSignup : sig
   val show : t -> string
   val create : bool -> t
   val value : t -> bool
-
-  val schema
-    :  unit
-    -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+  val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
 end
 
 module ExternalDataRequired : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module ShowExternalDataIdLinks : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module InvitationResetAt : sig
-  include Pool_common.Model.PtimeSig
+  include Pool_model.Base.PtimeSig
 
   val of_ptime : Ptime.t -> t
 end
@@ -145,7 +142,7 @@ val create
   -> AllowUninvitedSignup.t
   -> ExternalDataRequired.t
   -> ShowExternalDataIdLinks.t
-  -> (t, Pool_common.Message.error) result
+  -> (t, Pool_message.Error.t) result
 
 type create =
   { title : Title.t
@@ -161,10 +158,10 @@ type create =
   ; show_external_data_id_links : ShowExternalDataIdLinks.t
   ; experiment_type : Pool_common.ExperimentType.t option
   ; email_session_reminder_lead_time : int option
-  ; email_session_reminder_lead_time_unit : Pool_common.Model.TimeUnit.t option
+  ; email_session_reminder_lead_time_unit : Pool_model.Base.TimeUnit.t option
   ; text_message_session_reminder_lead_time : int option
   ; text_message_session_reminder_lead_time_unit :
-      Pool_common.Model.TimeUnit.t option
+      Pool_model.Base.TimeUnit.t option
   }
 
 val equal_create : create -> create -> bool
@@ -237,12 +234,12 @@ val created : t -> event
 val updated : t -> event
 val resetinvitations : t -> event
 val deleted : Pool_common.Id.t -> event
-val boolean_fields : Pool_common.Message.Field.t list
+val boolean_fields : Pool_message.Field.t list
 
 val find
   :  Pool_database.Label.t
   -> Id.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_all
   :  ?query:Query.t
@@ -260,23 +257,23 @@ val find_public
   :  Pool_database.Label.t
   -> Id.t
   -> Contact.t
-  -> (Public.t, Pool_common.Message.error) result Lwt.t
+  -> (Public.t, Pool_message.Error.t) result Lwt.t
 
 val find_full_by_contact
   :  Pool_database.Label.t
   -> Id.t
   -> Contact.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_of_session
   :  Pool_database.Label.t
   -> Pool_common.Id.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_of_mailing
   :  Pool_database.Label.t
   -> Pool_common.Id.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_all_public_by_contact
   :  Pool_database.Label.t
@@ -358,7 +355,7 @@ val show_external_data_id_links_value : t -> bool
 val smtp_auth
   :  Pool_database.Label.t
   -> t
-  -> (Email.SmtpAuth.t option, Pool_common.Message.error) Lwt_result.t
+  -> (Email.SmtpAuth.t option, Pool_message.Error.t) Lwt_result.t
 
 val find_contact_person : Pool_database.Label.t -> t -> Admin.t option Lwt.t
 
@@ -396,7 +393,7 @@ module Guard : sig
     val to_authorizable
       :  ?ctx:(string * string) list
       -> t
-      -> (Guard.Target.t, Pool_common.Message.error) Lwt_result.t
+      -> (Guard.Target.t, Pool_message.Error.t) Lwt_result.t
 
     type t
 
@@ -434,13 +431,13 @@ module Statistics : sig
     val create
       :  Pool_database.Label.t
       -> t
-      -> (statistics, Pool_common.Message.error) Lwt_result.t
+      -> (statistics, Pool_message.Error.t) Lwt_result.t
   end
 
   module RegistrationPossible : sig
-    include Pool_common.Model.BooleanSig
+    include Pool_model.Base.BooleanSig
 
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
     val hint : Pool_common.I18n.hint
   end
 
@@ -451,32 +448,32 @@ module Statistics : sig
       | Scheduled
 
     val show : t -> string
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
     val hint : Pool_common.I18n.hint
   end
 
   module SessionCount : sig
-    include Pool_common.Model.IntegerSig
+    include Pool_model.Base.IntegerSig
 
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
   end
 
   module ShowUpCount : sig
-    include Pool_common.Model.IntegerSig
+    include Pool_model.Base.IntegerSig
 
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
   end
 
   module NoShowCount : sig
-    include Pool_common.Model.IntegerSig
+    include Pool_model.Base.IntegerSig
 
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
   end
 
   module ParticipationCount : sig
-    include Pool_common.Model.IntegerSig
+    include Pool_model.Base.IntegerSig
 
-    val field : Pool_common.Message.Field.t
+    val field : Pool_message.Field.t
   end
 
   type statistics =
@@ -500,7 +497,7 @@ module Statistics : sig
   val create
     :  Pool_database.Label.t
     -> t
-    -> (statistics, Pool_common.Message.error) Lwt_result.t
+    -> (statistics, Pool_message.Error.t) Lwt_result.t
 end
 
 val column_title : Query.Column.t

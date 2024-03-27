@@ -1,4 +1,5 @@
-open Entity_message
+module Ptime = Utils.Ptime
+open Pool_message
 
 let rec field_to_string =
   let open Field in
@@ -298,11 +299,15 @@ let rec field_to_string =
   | Zip -> "zip code"
 ;;
 
-let info_to_string : info -> string = function
+let info_to_string =
+  let open Info in
+  function
   | Info s -> s
 ;;
 
-let success_to_string : success -> string = function
+let success_to_string =
+  let open Success in
+  function
   | AddedToWaitingList -> "You were added to the waiting list."
   | AssignmentCreated -> "You have been signed up successfully."
   | Canceled field ->
@@ -374,14 +379,18 @@ As long as the new e-mail address has not been confirmed, the current address wi
   | VerificationMessageResent -> "The verification message has been resent."
 ;;
 
-let warning_to_string : warning -> string = function
+let warning_to_string =
+  let open Warning in
+  function
   | Warning string -> string
 ;;
 
-let rec error_to_string = function
+let rec error_to_string =
+  let open Error in
+  function
   | AccountTemporarilySuspended ptime ->
     ptime
-    |> Utils.Ptime.formatted_date_time
+    |> Ptime.formatted_date_time
     |> Format.asprintf
          "Too many failed login attempts. This email address is blocked until \
           %s"
@@ -617,7 +626,9 @@ let format_submit submit field =
   field_message "" submit (field_opt_message field)
 ;;
 
-let control_to_string = function
+let control_to_string =
+  let open Control in
+  function
   | Accept field -> format_submit "accept" field
   | Add field -> format_submit "add" field
   | AddToWaitingList -> "Sign up for the waiting list"
@@ -626,7 +637,7 @@ let control_to_string = function
   | Assign field -> format_submit "assign" field
   | Back -> format_submit "back" None
   | Cancel field -> format_submit "cancel" field
-  | ChangeSession -> format_submit "change" (Some Entity_message_field.Session)
+  | ChangeSession -> format_submit "change" (Some Field.Session)
   | Choose field -> format_submit "choose" field
   | Close field -> format_submit "close" field
   | Create field -> format_submit "create" field

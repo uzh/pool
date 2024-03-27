@@ -1,4 +1,5 @@
 open Test_utils
+open Pool_message
 module TestSeed = Test_seed
 module Operator = Filter.Operator
 
@@ -122,7 +123,7 @@ module CustomFieldData = struct
 
   module Birthday = struct
     let answer_value =
-      "1990-01-01" |> Pool_common.Model.Ptime.date_of_string |> get_exn
+      "1990-01-01" |> Pool_model.Base.Ptime.date_of_string |> get_exn
     ;;
 
     let field = create_custom_field "Birthday" (fun a -> Custom_field.Date a)
@@ -617,7 +618,7 @@ let validate_filter_with_unknown_field _ () =
         filter
         query
     in
-    let expected = Error Pool_common.Message.(Invalid Field.Key) in
+    let expected = Error (Error.Invalid Field.Key) in
     check_result expected events |> Lwt.return
   in
   Lwt.return_unit
@@ -644,9 +645,7 @@ let validate_filter_with_invalid_value _ () =
         filter
         query
     in
-    let expected =
-      Error Pool_common.Message.(QueryNotCompatible (Field.Value, Field.Key))
-    in
+    let expected = Error (Error.QueryNotCompatible (Field.Value, Field.Key)) in
     check_result expected events |> Lwt.return
   in
   Lwt.return_unit
@@ -819,7 +818,6 @@ let retrieve_fitleterd_and_ordered_contacts _ () =
 ;;
 
 let create_filter_template_with_template _ () =
-  let open Pool_common in
   let%lwt () =
     let open CCResult in
     let open Filter in
@@ -836,11 +834,11 @@ let create_filter_template_with_template _ () =
     let filter = Template template_id in
     let events =
       let open Cqrs_command.Filter_command in
-      Message.Field.[ show Title, [ "Some title" ] ]
+      Field.[ show Title, [ "Some title" ] ]
       |> default_decode
       >>= Create.handle [] [ template ] filter
     in
-    let expected = Error Message.FilterMustNotContainTemplate in
+    let expected = Error Error.FilterMustNotContainTemplate in
     Alcotest.(check (result (list event) error) "succeeds" expected events)
     |> Lwt.return
   in
@@ -1188,9 +1186,7 @@ let filter_by_date_custom_field _ () =
       save () :: save_answers ~answer_value:(Some answer_value) [ contact ])
     |> Lwt_list.iter_s (Pool_event.handle_event Data.database_label)
   in
-  let date =
-    "1985-01-01" |> Pool_common.Model.Ptime.date_of_string |> get_exn
-  in
+  let date = "1985-01-01" |> Pool_model.Base.Ptime.date_of_string |> get_exn in
   let greater_filter =
     Birthday.filter ~date Operator.(Size.Greater |> size) ()
   in

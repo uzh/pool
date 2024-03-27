@@ -1,21 +1,21 @@
-module Token : Pool_common.Model.StringSig
+module Token : Pool_model.Base.StringSig
 
 module ConfirmedAt : sig
-  include Pool_common.Model.PtimeSig
+  include Pool_model.Base.PtimeSig
 end
 
 module NotifiedAt : sig
-  include Pool_common.Model.PtimeSig
+  include Pool_model.Base.PtimeSig
 end
 
 module ReminderCount : sig
-  include Pool_common.Model.IntegerSig
+  include Pool_model.Base.IntegerSig
 
   val init : t
 end
 
 module LastRemindedAt : sig
-  include Pool_common.Model.PtimeSig
+  include Pool_model.Base.PtimeSig
 end
 
 type t =
@@ -36,7 +36,7 @@ val equal : t -> t -> bool
 val find_pending_by_token
   :  Pool_database.Label.t
   -> Token.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_pending_by_user_id_opt
   :  Pool_database.Label.t

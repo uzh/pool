@@ -1,6 +1,6 @@
 module JobName = struct
   module Core = struct
-    let field = Pool_common.Message.Field.Name
+    let field = Pool_message.Field.Name
 
     type t =
       | SendEmail [@name "send_email"] [@printer Utils.ppx_printer "send_email"]
@@ -9,13 +9,13 @@ module JobName = struct
     [@@deriving enum, eq, ord, sexp_of, show { with_path = false }, yojson]
   end
 
-  include Pool_common.Model.SelectorType (Core)
+  include Pool_model.Base.SelectorType (Core)
   include Core
 end
 
 module Status = struct
   module Core = struct
-    let field = Pool_common.Message.Field.Status
+    let field = Pool_message.Field.Status
 
     type t =
       | Pending [@name "pending"]
@@ -25,7 +25,7 @@ module Status = struct
     [@@deriving enum, eq, ord, sexp_of, show { with_path = false }, yojson]
   end
 
-  include Pool_common.Model.SelectorType (Core)
+  include Pool_model.Base.SelectorType (Core)
   include Core
 
   let sihl_queue_to_human status =
@@ -35,10 +35,10 @@ module Status = struct
   ;;
 end
 
-open Pool_common.Message
+open Pool_message
 
 let is_pending job = job.Sihl_queue.status = Sihl_queue.(Pending)
-let resendable job = if is_pending job then Error JobPending else Ok job
+let resendable job = if is_pending job then Error Error.JobPending else Ok job
 let column_job_name = (Field.Name, "queue_jobs.name") |> Query.Column.create
 
 let column_job_status =

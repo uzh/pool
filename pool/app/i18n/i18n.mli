@@ -12,20 +12,17 @@ module Key : sig
     | TermsAndConditions
     | WelcomeText
 
-  val create : string -> (t, Pool_common.Message.error) result
+  val create : string -> (t, Pool_message.Error.t) result
   val show : t -> string
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val is_rich_text : t -> bool
   val all : t list
-
-  val schema
-    :  unit
-    -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+  val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
 end
 
 module Content : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 type t
@@ -92,7 +89,7 @@ module Guard : sig
     val to_authorizable
       :  ?ctx:(string * string) list
       -> t
-      -> (Guard.Target.t, Entity.PoolError.error) Lwt_result.t
+      -> (Guard.Target.t, Pool_message.Error.t) Lwt_result.t
 
     type t
 

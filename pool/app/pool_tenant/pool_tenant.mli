@@ -1,11 +1,11 @@
 module Database = Pool_database
 module Id : module type of Pool_common.Id
-module Title : Pool_common.Model.StringSig
-module Description : Pool_common.Model.StringSig
-module GtxApiKey : Pool_common.Model.StringSig
+module Title : Pool_model.Base.StringSig
+module Description : Pool_model.Base.StringSig
+module GtxApiKey : Pool_model.Base.StringSig
 
 module Url : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 
   val of_pool : Database.Label.t -> t Lwt.t
 end
@@ -22,12 +22,9 @@ module Styles : sig
   module Write : sig
     type t
 
-    val create : string -> (t, Pool_common.Message.error) result
+    val create : string -> (t, Pool_message.Error.t) result
     val value : t -> string
-
-    val schema
-      :  unit
-      -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+    val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
   end
 end
 
@@ -41,12 +38,9 @@ module Icon : sig
   module Write : sig
     type t
 
-    val create : string -> (t, Pool_common.Message.error) result
+    val create : string -> (t, Pool_message.Error.t) result
     val value : t -> string
-
-    val schema
-      :  unit
-      -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+    val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
   end
 end
 
@@ -58,9 +52,7 @@ module Logos : sig
 
   val schema
     :  unit
-    -> ( Pool_common.Message.error
-         , Pool_common.Id.t list )
-         Pool_common.Utils.PoolConformist.Field.t
+    -> (Pool_message.Error.t, Pool_common.Id.t list) Pool_conformist.Field.t
 
   val of_files : Pool_common.File.t list -> t
 end
@@ -73,15 +65,13 @@ module PartnerLogos : sig
 
   val schema
     :  unit
-    -> ( Pool_common.Message.error
-         , Pool_common.Id.t list )
-         Pool_common.Utils.PoolConformist.Field.t
+    -> (Pool_message.Error.t, Pool_common.Id.t list) Pool_conformist.Field.t
 
   val of_files : Pool_common.File.t list -> t
 end
 
-module Maintenance : Pool_common.Model.BooleanSig
-module Disabled : Pool_common.Model.BooleanSig
+module Maintenance : Pool_model.Base.BooleanSig
+module Disabled : Pool_model.Base.BooleanSig
 
 module LogoMapping : sig
   module LogoType : sig
@@ -89,10 +79,10 @@ module LogoMapping : sig
       | PartnerLogo
       | TenantLogo
 
-    val of_string : string -> (t, Pool_common.Message.error) result
+    val of_string : string -> (t, Pool_message.Error.t) result
     val to_string : t -> string
     val all : t list
-    val all_fields : Pool_common.Message.Field.t list
+    val all_fields : Pool_message.Field.t list
   end
 
   module Write : sig
@@ -190,23 +180,19 @@ val handle_event : Database.Label.t -> event -> unit Lwt.t
 val equal_event : event -> event -> bool
 val pp_event : Format.formatter -> event -> unit
 val show_event : event -> string
-val find : Id.t -> (t, Pool_common.Message.error) Lwt_result.t
-val find_full : Id.t -> (Write.t, Pool_common.Message.error) Lwt_result.t
-
-val find_by_label
-  :  Database.Label.t
-  -> (t, Pool_common.Message.error) Lwt_result.t
-
+val find : Id.t -> (t, Pool_message.Error.t) Lwt_result.t
+val find_full : Id.t -> (Write.t, Pool_message.Error.t) Lwt_result.t
+val find_by_label : Database.Label.t -> (t, Pool_message.Error.t) Lwt_result.t
 val find_all : unit -> t list Lwt.t
 val find_databases : unit -> Database.t list Lwt.t
 
 val find_database_by_label
   :  Pool_database.Label.t
-  -> (Database.t, Pool_common.Message.error) Lwt_result.t
+  -> (Database.t, Pool_message.Error.t) Lwt_result.t
 
 val find_gtx_api_key_by_label
   :  Pool_database.Label.t
-  -> (GtxApiKey.t, Pool_common.Message.error) result Lwt.t
+  -> (GtxApiKey.t, Pool_message.Error.t) result Lwt.t
 
 val create_public_url : Url.t -> string -> string
 
@@ -225,14 +211,14 @@ module Selection : sig
   val label : t -> Database.Label.t
 end
 
-val file_fields : Pool_common.Message.Field.t list
+val file_fields : Pool_message.Field.t list
 
 module Guard : sig
   module Actor : sig
     val to_authorizable
       :  ?ctx:(string * string) list
       -> t
-      -> (Guard.Actor.t, Pool_common.Message.error) Lwt_result.t
+      -> (Guard.Actor.t, Pool_message.Error.t) Lwt_result.t
 
     type t
 
@@ -244,7 +230,7 @@ module Guard : sig
     val to_authorizable
       :  ?ctx:(string * string) list
       -> t
-      -> (Guard.Target.t, Pool_common.Message.error) Lwt_result.t
+      -> (Guard.Target.t, Pool_message.Error.t) Lwt_result.t
 
     type t
   end

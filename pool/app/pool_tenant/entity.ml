@@ -6,33 +6,32 @@ module CreatedAt = Common.CreatedAt
 module UpdatedAt = Common.UpdatedAt
 module File = Common.File
 module LogoMapping = Entity_logo_mapping
-module PoolError = Common.Message
 
 module Title = struct
-  include Pool_common.Model.String
+  include Pool_model.Base.String
 
-  let field = Common.Message.Field.Title
+  let field = Pool_message.Field.Title
   let schema () = schema field ()
 end
 
 module Description = struct
-  include Pool_common.Model.String
+  include Pool_model.Base.String
 
-  let field = Common.Message.Field.Description
+  let field = Pool_message.Field.Description
   let schema () = schema field ()
 end
 
 module Url = struct
-  include Pool_common.Model.String
+  include Pool_model.Base.String
 
-  let field = Common.Message.Field.Url
+  let field = Pool_message.Field.Url
   let schema () = schema field ()
 end
 
 module GtxApiKey = struct
-  include Common.Model.String
+  include Pool_model.Base.String
 
-  let field = Common.Message.Field.GtxApiKey
+  let field = Pool_message.Field.GtxApiKey
   let schema () = schema field ()
 end
 
@@ -45,9 +44,9 @@ module Styles = struct
   let create m = m
 
   module Write = struct
-    include Pool_common.Model.String
+    include Pool_model.Base.String
 
-    let field = Common.Message.Field.Styles
+    let field = Pool_message.Field.Styles
     let schema () = schema field ()
   end
 end
@@ -59,9 +58,9 @@ module Icon = struct
   let of_file m = m
 
   module Write = struct
-    include Pool_common.Model.String
+    include Pool_model.Base.String
 
-    let field = Common.Message.Field.Icon
+    let field = Pool_message.Field.Icon
     let schema () = schema field ()
   end
 end
@@ -73,10 +72,10 @@ module Logos = struct
   let create m = Ok (CCList.map Common.Id.of_string m)
 
   let schema () =
-    Common.Utils.schema_list_decoder
+    Pool_conformist.schema_list_decoder
       create
       (CCList.map Common.Id.value)
-      PoolError.Field.TenantLogos
+      Pool_message.Field.TenantLogos
   ;;
 
   let of_files lst = lst
@@ -89,25 +88,25 @@ module PartnerLogos = struct
   let value m = m
 
   let schema () =
-    Common.Utils.schema_list_decoder
+    Pool_conformist.schema_list_decoder
       create
       (fun l -> l |> CCList.map Common.Id.value)
-      PoolError.Field.PartnerLogos
+      Pool_message.Field.PartnerLogos
   ;;
 
   let of_files lst = lst
 end
 
 module Maintenance = struct
-  include Pool_common.Model.Boolean
+  include Pool_model.Base.Boolean
 
-  let schema = schema PoolError.Field.TenantMaintenanceFlag
+  let schema = schema Pool_message.Field.TenantMaintenanceFlag
 end
 
 module Disabled = struct
-  include Pool_common.Model.Boolean
+  include Pool_model.Base.Boolean
 
-  let schema = schema PoolError.Field.TenantDisabledFlag
+  let schema = schema Pool_message.Field.TenantDisabledFlag
 end
 
 type t =
@@ -199,5 +198,5 @@ module Selection = struct
 end
 
 let file_fields =
-  Pool_common.Message.Field.([ Styles; Icon ] @ LogoMapping.LogoType.all_fields)
+  Pool_message.Field.([ Styles; Icon ] @ LogoMapping.LogoType.all_fields)
 ;;

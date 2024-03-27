@@ -7,17 +7,17 @@ module Id = struct
 end
 
 module StartAt = struct
-  include Pool_common.Model.Ptime
+  include Pool_model.Base.Ptime
 
-  let field = Pool_common.Message.Field.Start
+  let field = Pool_message.Field.Start
   let create m = Ok m
   let schema = schema field create
 end
 
 module StartNow = struct
-  include Pool_common.Model.Boolean
+  include Pool_model.Base.Boolean
 
-  let schema = schema Pool_common.Message.Field.StartNow
+  let schema = schema Pool_message.Field.StartNow
 end
 
 module Start = struct
@@ -32,12 +32,12 @@ module Start = struct
       | StartAt start_at when allow_start_in_past -> Ok start_at
       | StartAt start_at ->
         if Ptime.is_earlier ~than:(Ptime_clock.now ()) start_at
-        then Error Pool_common.Message.TimeInPast
+        then Error Pool_message.Error.TimeInPast
         else Ok start_at
       | StartNow -> Ok (Ptime_clock.now ())
     in
     if Ptime.is_later ~than:end_at start_at
-    then Error Pool_common.Message.EndBeforeStart
+    then Error Pool_message.Error.EndBeforeStart
     else Ok start_at
   ;;
 
@@ -46,25 +46,25 @@ module Start = struct
     | true, _ -> Ok StartNow
     | false, Some start_at -> Ok (StartAt start_at)
     | false, None ->
-      Error Pool_common.Message.(Conformist [ Field.Start, NoValue ])
+      Error Pool_message.(Error.Conformist [ Field.Start, Error.NoValue ])
   ;;
 end
 
 module EndAt = struct
-  include Pool_common.Model.Ptime
+  include Pool_model.Base.Ptime
 
-  let field = Pool_common.Message.Field.End
+  let field = Pool_message.Field.End
   let create m = Ok m
   let schema = schema field create
 end
 
 module Limit = struct
-  include Pool_common.Model.Integer
+  include Pool_model.Base.Integer
 
-  let field = Pool_common.Message.Field.Limit
+  let field = Pool_message.Field.Limit
 
   let create m =
-    if m > 0 then Ok m else Error Pool_common.Message.(Invalid field)
+    if m > 0 then Ok m else Error Pool_message.(Error.Invalid field)
   ;;
 
   let of_int m = m
@@ -73,12 +73,12 @@ module Limit = struct
 end
 
 module InvitationCount = struct
-  include Pool_common.Model.Integer
+  include Pool_model.Base.Integer
 
-  let field = Pool_common.Message.Field.InvitationCount
+  let field = Pool_message.Field.InvitationCount
 
   let create m =
-    if m >= 0 then Ok m else Error Pool_common.Message.(Invalid field)
+    if m >= 0 then Ok m else Error Pool_message.(Error.Invalid field)
   ;;
 
   let default = 0
@@ -90,7 +90,7 @@ module Distribution = struct
 
   module SortableField = struct
     module Core = struct
-      let field = Pool_common.Message.Field.Distribution
+      let field = Pool_message.Field.Distribution
 
       type t =
         | AssignmentCount [@name "assignment_count"]
@@ -101,12 +101,12 @@ module Distribution = struct
       [@@deriving enum, eq, ord, sexp_of, show { with_path = false }, yojson]
     end
 
-    include Pool_common.Model.SelectorType (Core)
+    include Pool_model.Base.SelectorType (Core)
     include Core
 
     let to_human language =
       let go = Pool_common.Utils.field_to_string language in
-      let open Pool_common.Message in
+      let open Pool_message in
       function
       | AssignmentCount -> Field.AssignmentCount |> go
       | Firstname -> Field.Firstname |> go
@@ -127,11 +127,10 @@ module Distribution = struct
 
     let to_human lang =
       let open CCFun in
-      let open Pool_common in
       (function
-        | Ascending -> Message.Ascending
-        | Descending -> Message.Descending)
-      %> Utils.control_to_string lang
+        | Ascending -> Pool_message.Control.Ascending
+        | Descending -> Pool_message.Control.Descending)
+      %> Pool_common.Utils.control_to_string lang
     ;;
   end
 
@@ -143,7 +142,7 @@ module Distribution = struct
     | Random
   [@@deriving eq, show { with_path = false }, yojson]
 
-  let field = Pool_common.Message.Field.Distribution
+  let field = Pool_message.Field.Distribution
   let create_sorted m = Sorted m
   let value m = m
 
@@ -174,13 +173,12 @@ module Distribution = struct
   ;;
 
   let is_random_schema () =
-    let open Pool_common in
     let default = false in
-    Utils.schema_decoder
+    Pool_conformist.schema_decoder
       ~default
       CCFun.(bool_of_string_opt %> CCOption.get_or ~default %> CCResult.return)
       string_of_bool
-      Pool_common.Message.Field.RandomOrder
+      Pool_message.Field.RandomOrder
   ;;
 
   let schema () =
@@ -190,10 +188,10 @@ module Distribution = struct
         m |> Yojson.Safe.from_string |> sorted_of_yojson |> CCResult.return
       with
       | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, yojson) ->
-        Pool_common.Utils.handle_ppx_yojson_err (exn, yojson)
-      | _ -> Error Pool_common.Message.(Invalid field)
+        Pool_message.handle_ppx_yojson_err (exn, yojson)
+      | _ -> Error Pool_message.(Error.Invalid field)
     in
-    Pool_common.Utils.schema_decoder decode encode field
+    Pool_conformist.schema_decoder decode encode field
   ;;
 
   let of_urlencoded_list =
@@ -206,7 +204,7 @@ module Distribution = struct
         match CCString.split ~by:"," distribution_field with
         | [ field; order ] ->
           Ok (Format.asprintf "[[\"%s\"],[\"%s\"]]" field order)
-        | _ -> Error Pool_common.Message.(Invalid Field.Distribution))
+        | _ -> Error Pool_message.(Error.Invalid Field.Distribution))
       |> CCResult.flatten_l
       >|= CCString.concat ","
       >|= Format.asprintf "[%s]"
@@ -261,7 +259,7 @@ let per_interval interval { start_at; end_at; limit; _ } =
 
 let is_past { end_at; _ } = Ptime.is_later ~than:end_at (Ptime_clock.now ())
 
-open Pool_common.Message
+open Pool_message
 open Query
 
 let column_start = (Field.start, "pool_mailing.`start`") |> Column.create

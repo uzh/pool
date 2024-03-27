@@ -1,6 +1,6 @@
 module Answer : sig
   module Id : sig
-    include Pool_common.Model.IdSig
+    include Pool_model.Base.IdSig
   end
 
   type 'a t =
@@ -27,7 +27,7 @@ module Answer : sig
 end
 
 module Id : sig
-  include Pool_common.Model.IdSig
+  include Pool_model.Base.IdSig
 end
 
 module Model : sig
@@ -39,11 +39,8 @@ module Model : sig
   val t_of_yojson : Yojson.Safe.t -> t
   val yojson_of_t : t -> Yojson.Safe.t
   val all : t list
-  val create : string -> (t, Pool_common.Message.error) result
-
-  val schema
-    :  unit
-    -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+  val create : string -> (t, Pool_message.Error.t) result
+  val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
 end
 
 module Name : sig
@@ -69,7 +66,7 @@ module Name : sig
   val create
     :  Pool_common.Language.t list
     -> (Pool_common.Language.t * string) list
-    -> (t, Pool_common.Message.error) result
+    -> (t, Pool_message.Error.t) result
 end
 
 module Hint : sig
@@ -93,7 +90,7 @@ module Hint : sig
 
   val create
     :  (Pool_common.Language.t * string) list
-    -> (t, Pool_common.Message.error) result
+    -> (t, Pool_message.Error.t) result
 end
 
 module FieldType : sig
@@ -110,47 +107,44 @@ module FieldType : sig
   val show : t -> string
   val all : t list
   val to_string : t -> string
-
-  val schema
-    :  unit
-    -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+  val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
 end
 
 module Required : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module Disabled : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module PublishedAt : sig
-  include Pool_common.Model.PtimeSig
+  include Pool_model.Base.PtimeSig
 end
 
 module AdminHint : sig
-  include Pool_common.Model.StringSig
+  include Pool_model.Base.StringSig
 end
 
 module AdminOverride : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module AdminViewOnly : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module AdminInputOnly : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module PromptOnRegistration : sig
-  include Pool_common.Model.BooleanSig
+  include Pool_model.Base.BooleanSig
 end
 
 module Validation : sig
   type raw = (string * string) list
-  type 'a t = ('a -> ('a, Pool_common.Message.error) result) * raw
+  type 'a t = ('a -> ('a, Pool_message.Error.t) result) * raw
 
   module Number : sig
     type key =
@@ -161,7 +155,7 @@ module Validation : sig
 
     val schema
       :  (string * string) list
-      -> (int -> (int, Pool_common.Message.error) result) * raw
+      -> (int -> (int, Pool_message.Error.t) result) * raw
   end
 
   module Text : sig
@@ -173,7 +167,7 @@ module Validation : sig
 
     val schema
       :  (string * string) list
-      -> (string -> (string, Pool_common.Message.error) result) * raw
+      -> (string -> (string, Pool_message.Error.t) result) * raw
   end
 
   module MultiSelect : sig
@@ -185,7 +179,7 @@ module Validation : sig
 
     val schema
       :  (string * string) list
-      -> ('a list -> ('a list, Pool_common.Message.error) result) * raw
+      -> ('a list -> ('a list, Pool_message.Error.t) result) * raw
   end
 
   val key_to_human : string -> string
@@ -196,7 +190,7 @@ end
 
 module SelectOption : sig
   module Id : sig
-    include Pool_common.Model.IdSig
+    include Pool_model.Base.IdSig
   end
 
   type t =
@@ -211,11 +205,7 @@ module SelectOption : sig
   val show_id : t -> string
   val name : Pool_common.Language.t -> t -> string
   val create : ?id:Id.t -> ?published_at:PublishedAt.t -> Name.t -> t
-
-  val to_common_field
-    :  Pool_common.Language.t
-    -> t
-    -> Pool_common.Message.Field.t
+  val to_common_field : Pool_common.Language.t -> t -> Pool_message.Field.t
 
   module Public : sig
     type t =
@@ -229,11 +219,7 @@ module SelectOption : sig
     val show_id : t -> string
     val name : Pool_common.Language.t -> t -> string
     val create : ?id:Id.t -> Name.t -> t
-
-    val to_common_field
-      :  Pool_common.Language.t
-      -> t
-      -> Pool_common.Message.Field.t
+    val to_common_field : Pool_common.Language.t -> t -> Pool_message.Field.t
   end
 end
 
@@ -289,11 +275,7 @@ module Public : sig
   val version : t -> Pool_common.Version.t
   val field_type : t -> FieldType.t
   val increment_version : t -> t
-
-  val to_common_field
-    :  Pool_common.Language.t
-    -> t
-    -> Pool_common.Message.Field.t
+  val to_common_field : Pool_common.Language.t -> t -> Pool_message.Field.t
 
   val to_common_hint
     :  Pool_common.Language.t
@@ -306,11 +288,9 @@ end
 
 module Group : sig
   module Id : sig
-    include Pool_common.Model.IdSig
+    include Pool_model.Base.IdSig
 
-    val schema
-      :  unit
-      -> (Pool_common.Message.error, t) Pool_common.Utils.PoolConformist.Field.t
+    val schema : unit -> (Pool_message.Error.t, t) Pool_conformist.Field.t
   end
 
   type t =
@@ -387,10 +367,10 @@ val create
   -> AdminViewOnly.t
   -> AdminInputOnly.t
   -> PromptOnRegistration.t
-  -> (t, Pool_common.Message.error) result
+  -> (t, Pool_message.Error.t) result
 
-val boolean_fields : Pool_common.Message.Field.t list
-val has_options : t -> (unit, Pool_common.Message.error) result
+val boolean_fields : Pool_message.Field.t list
+val has_options : t -> (unit, Pool_message.Error.t) result
 val id : t -> Id.t
 val model : t -> Model.t
 val name : t -> Name.t
@@ -432,14 +412,14 @@ val validate_htmx
   -> entity_uuid:Pool_common.Id.t
   -> string list
   -> Public.t
-  -> (Public.t, Pool_common.Message.error) result
+  -> (Public.t, Pool_message.Error.t) result
 
 val validate_partial_update
   :  ?is_admin:bool
   -> Contact.t
   -> Public.t option
-  -> Pool_common.Message.Field.t * Pool_common.Version.t * string list
-  -> (PartialUpdate.t, Pool_common.Message.error) Lwt_result.t
+  -> Pool_message.Field.t * Pool_common.Version.t * string list
+  -> (PartialUpdate.t, Pool_message.Error.t) Lwt_result.t
 
 type event =
   | AdminAnswerCleared of Public.t * Pool_common.Id.t
@@ -472,7 +452,7 @@ val find_ungrouped_by_model : Pool_database.Label.t -> Model.t -> t list Lwt.t
 val find
   :  Pool_database.Label.t
   -> Id.t
-  -> (t, Pool_common.Message.error) result Lwt.t
+  -> (t, Pool_message.Error.t) result Lwt.t
 
 val find_by_table_view
   :  Pool_database.Label.t
@@ -515,7 +495,7 @@ val find_by_contact
   -> Pool_database.Label.t
   -> Pool_common.Id.t
   -> Id.t
-  -> (Public.t, Pool_common.Message.error) result Lwt.t
+  -> (Public.t, Pool_message.Error.t) result Lwt.t
 
 val all_required_answered
   :  Pool_database.Label.t
@@ -535,7 +515,7 @@ val find_public_by_contacts_and_view
 val find_option
   :  Pool_database.Label.t
   -> SelectOption.Id.t
-  -> (SelectOption.t, Pool_common.Message.error) result Lwt.t
+  -> (SelectOption.t, Pool_message.Error.t) result Lwt.t
 
 val find_options_by_field
   :  Pool_database.Label.t
@@ -545,7 +525,7 @@ val find_options_by_field
 val find_group
   :  Pool_database.Label.t
   -> Group.Id.t
-  -> (Group.t, Pool_common.Message.error) result Lwt.t
+  -> (Group.t, Pool_message.Error.t) result Lwt.t
 
 val find_groups_by_model
   :  Pool_database.Label.t
@@ -575,7 +555,7 @@ module Guard : sig
     val to_authorizable
       :  ?ctx:(string * string) list
       -> t
-      -> (Guard.Target.t, Pool_common.Message.error) Lwt_result.t
+      -> (Guard.Target.t, Pool_message.Error.t) Lwt_result.t
 
     type t
 
@@ -591,7 +571,7 @@ module Guard : sig
       val to_authorizable
         :  ?ctx:(string * string) list
         -> Group.t
-        -> (Guard.Target.t, Pool_common.Message.error) Lwt_result.t
+        -> (Guard.Target.t, Pool_message.Error.t) Lwt_result.t
 
       type t
 

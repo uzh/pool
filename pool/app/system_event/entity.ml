@@ -26,7 +26,7 @@ module Job = struct
 
   let of_string str =
     try Ok (read str) with
-    | _ -> Error Pool_common.Message.(Invalid Field.SystemEvent)
+    | _ -> Error Pool_message.(Error.Invalid Field.SystemEvent)
   ;;
 
   let to_string m = m |> yojson_of_t |> Yojson.Safe.to_string
@@ -50,9 +50,9 @@ let create ?(id = Id.create ()) job =
 
 module EventLog = struct
   module ServiceIdentifier = struct
-    include Pool_common.Model.String
+    include Pool_model.Base.String
 
-    let field = Pool_common.Message.Field.Host
+    let field = Pool_message.Field.Host
     let schema () = schema field ()
 
     let get ?identifier () =
@@ -67,7 +67,7 @@ module EventLog = struct
 
   module Status = struct
     module Core = struct
-      let field = Pool_common.Message.Field.Status
+      let field = Pool_message.Field.Status
 
       type t =
         | Failed [@name "failed"] [@printer print "failed"]
@@ -75,12 +75,12 @@ module EventLog = struct
       [@@deriving enum, eq, ord, sexp_of, show { with_path = false }, yojson]
     end
 
-    include Pool_common.Model.SelectorType (Core)
+    include Pool_model.Base.SelectorType (Core)
     include Core
 
     let to_human language =
       let go = Pool_common.Utils.field_to_string language in
-      let open Pool_common.Message in
+      let open Pool_message in
       function
       | Failed -> Field.Failed |> go
       | Successful -> Field.Successful |> go
@@ -90,14 +90,14 @@ module EventLog = struct
 
     let of_string str =
       try Ok (read str) with
-      | _ -> Error Pool_common.Message.(Invalid Field.Status)
+      | _ -> Error Pool_message.(Error.Invalid Field.Status)
     ;;
   end
 
   module Message = struct
-    include Pool_common.Model.String
+    include Pool_model.Base.String
 
-    let field = Pool_common.Message.Field.Message
+    let field = Pool_message.Field.Message
     let schema () = schema field ()
   end
 

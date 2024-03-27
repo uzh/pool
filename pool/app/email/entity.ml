@@ -1,4 +1,3 @@
-module PoolError = Pool_common.Message
 module Database = Pool_database
 module SmtpAuth = Entity_smtp
 module User = Pool_user
@@ -23,7 +22,7 @@ module Token = struct
 end
 
 module VerifiedAt = struct
-  include Pool_common.Model.Ptime
+  include Pool_model.Base.Ptime
 
   let create m = m
 end
@@ -139,7 +138,7 @@ type job =
 
 let parse_job_json str =
   try Ok (str |> Yojson.Safe.from_string |> job_of_yojson) with
-  | _ -> Error Pool_common.Message.(Invalid Field.Input)
+  | _ -> Error Pool_message.(Error.Invalid Field.Input)
 ;;
 
 let job_message_history { message_history; _ } = message_history

@@ -15,7 +15,7 @@ let find_default_by_label_and_language pool language label =
         Pool_common.(
           Utils.error_to_string
             Language.En
-            Message.(NotFound Field.MessageTemplate))
+            Pool_message.(Error.NotFound Field.MessageTemplate))
 ;;
 
 let find_default_by_label = Repo.find_default_by_label
@@ -203,11 +203,9 @@ let session_params
       in
       [ main_session; follow_ups ] |> CCString.concat "\n\n"
   in
-  let start =
-    start |> Start.value |> Pool_common.Utils.Time.formatted_date_time
-  in
+  let start = start |> Start.value |> Pool_model.Time.formatted_date_time in
   let duration =
-    duration |> Duration.value |> Pool_common.Utils.Time.formatted_timespan
+    duration |> Duration.value |> Pool_model.Time.formatted_timespan
   in
   let description =
     session.public_description
@@ -606,9 +604,9 @@ module EmailVerification = struct
     let%lwt url = Pool_tenant.Url.of_pool pool in
     let validation_url =
       Pool_common.
-        [ ( Message.Field.Language
+        [ ( Pool_message.Field.Language
           , language |> Language.show |> CCString.lowercase_ascii )
-        ; Message.Field.Token, Email.Token.value token
+        ; Pool_message.Field.Token, Email.Token.value token
         ]
       |> create_public_url_with_params url "/email-verified"
     in
@@ -825,12 +823,12 @@ module PasswordReset = struct
           m
             ~tags:(Pool_database.Logger.Tags.create pool)
             "Reset token not found");
-        Error Message.PasswordResetFailMessage
+        Error Pool_message.Error.PasswordResetFailMessage
       | Some token -> Ok token
     in
     let layout = create_layout layout in
     let reset_url =
-      Message.
+      Pool_message.
         [ Field.Token, reset_token
         ; Field.Language, language |> Language.show |> CCString.lowercase_ascii
         ]
@@ -1170,7 +1168,7 @@ module SessionReschedule = struct
 
   let email_params lang layout experiment session new_start new_duration contact
     =
-    let open Pool_common.Utils.Time in
+    let open Pool_model.Time in
     let open Session in
     global_params layout contact.Contact.user
     @ [ "newStart", new_start |> Start.value |> formatted_date_time
@@ -1250,9 +1248,9 @@ module SignUpVerification = struct
     let%lwt sender = default_sender_of_pool pool in
     let verification_url =
       Pool_common.
-        [ ( Message.Field.Language
+        [ ( Pool_message.Field.Language
           , language |> Language.show |> CCString.lowercase_ascii )
-        ; Message.Field.Token, Email.Token.value token
+        ; Pool_message.Field.Token, Email.Token.value token
         ]
       |> create_public_url_with_params url "/email-verified"
     in
@@ -1315,9 +1313,9 @@ module UserImport = struct
     let language = language default_language user in
     let confirmation_url =
       Pool_common.
-        [ ( Message.Field.Language
+        [ ( Pool_message.Field.Language
           , language |> Language.show |> CCString.lowercase_ascii )
-        ; Message.Field.Token, token
+        ; Pool_message.Field.Token, token
         ]
       |> create_public_url_with_params url "/import-confirmation"
     in
