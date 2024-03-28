@@ -1,5 +1,4 @@
 open CCFun
-module Assignment = Admin_experiments_assignments
 module Field = Pool_common.Message.Field
 module FilterEntity = Filter
 module HttpUtils = Http_utils
@@ -267,7 +266,7 @@ let detail edit req =
            Email.SmtpAuth.find database_label id >|+ CCOption.return)
        in
        let* statistics =
-         Experiment.Statistics.create database_label experiment
+         Statistics.Experiment.create database_label experiment
        in
        Page.Admin.Experiments.detail
          experiment

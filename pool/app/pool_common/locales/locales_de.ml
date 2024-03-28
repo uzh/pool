@@ -28,7 +28,6 @@ let rec field_to_string =
   | Assistants -> "Assistenten"
   | AvailableLanguages -> "Verfügbare Sprachen"
   | Building -> "Gebäude"
-  | Canceled -> "Abgesagt"
   | CanceledAt -> "Abgesagt am"
   | CellPhone -> "Mobiltelefon"
   | Chronological -> "chronologisch"
@@ -172,6 +171,7 @@ let rec field_to_string =
   | NoShow -> "Nicht anwesend"
   | NoShowAbr -> "NS"
   | NoShowCount -> "Abwesende"
+  | NotMatchingFilterCount -> "unpassende"
   | NotifiedAt -> "Benachrichtigt am"
   | NotifyVia -> "Benachrichtigen via"
   | NotifyContact -> "Kontakt benachrichtigen"
@@ -719,6 +719,7 @@ let control_to_string = function
   | ToggleAll -> "alle umschalten"
   | Unassign field -> format_submit "entfernen" field
   | Update field -> format_submit "aktualisieren" field
+  | UpdateAssignmentsMatchFilter -> format_submit "Filter erneut ausführen" None
   | UpdateOrder -> "Reihenfolge anpassen"
   | Validate -> "Validieren"
   | Verify field -> format_submit "verifizieren" field
